@@ -1,0 +1,39 @@
+syntax = "proto2";
+
+package yamcs.protobuf;
+
+option java_package = "com.windhoverlabs.yamcs.cfs.err_log.api";
+option java_outer_classname = "CfsErrLogFileModeProto";
+option java_multiple_files = true;
+import "yamcs/api/annotations.proto";
+import "yamcs/api/httpbody.proto";
+
+//A collection of useful functions for clients interested in cfs-specific data
+service CfsErrLogFileModeApi {
+
+  // Start
+  rpc SetMode(SetCFSErrLogFileModeRequest) returns (CfsErrLogFileModeConfig) {
+    option (yamcs.api.route) = {
+      post: "/api/{instance}/cfs/err_log/mode/"
+      body: "*"	
+    };
+  }
+}
+
+enum CfsErrLogFileMode {
+  APPEND = 1;  
+  REPLACE = 2; 
+  INACTIVE = 3; 
+}
+
+message CfsErrLogFileModeConfig {
+  optional string instance = 1;
+  optional string linkName = 2;
+  optional CfsErrLogFileMode mode  = 3;
+}
+message SetCFSErrLogFileModeRequest {
+  // Yamcs instance name.
+  optional string instance = 1;
+  optional string linkName = 2;
+  optional CfsErrLogFileMode mode  = 3;
+}
