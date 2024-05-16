@@ -1,4 +1,4 @@
-[![CI](https://github.com/WindhoverLabs/yamcs-cfs-ds/actions/workflows/ci.yml/badge.svg)](https://github.com/WindhoverLabs/yamcs-cfs-ds/actions/workflows/ci.yml)
+[![CI](https://github.com/WindhoverLabs/yamcs-cfs-error-log/actions/workflows/ci.yml/badge.svg)](https://github.com/WindhoverLabs/yamcs-cfs-error-log/actions/workflows/ci.yml)
 <!-- [![Coverage Status](https://coveralls.io/repos/github/WindhoverLabs/yamcs-cfs-ds/badge.svg?branch=main)](https://coveralls.io/github/WindhoverLabs/yamcs-cfs-ds?branch=main) -->
 # yamcs-cfs-error-log
 A YAMCS plugin for the Core Flight System (CFS) Error Log format. It has the ability to parse
