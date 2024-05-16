@@ -238,8 +238,6 @@ public class CfsErrLogPlugin extends AbstractTmDataLink
         EventProducerFactory.getEventProducer(
             yamcsInstance, this.getClass().getCanonicalName(), 10000);
 
-    System.out.println("eventProducer:" + eventProducer);
-
     YConfiguration csvConfig = config.getConfig("sysLogFileConfig");
 
     mode = getMode(csvConfig);
@@ -334,7 +332,7 @@ public class CfsErrLogPlugin extends AbstractTmDataLink
     if (isDisabled()) {
       return String.format("DISABLED");
     } else {
-      return String.format("OK, received %d cfs sys logs", packetCount.get());
+      return String.format("OK, received %d cfs error logs", packetCount.get());
     }
   }
 
@@ -563,6 +561,7 @@ public class CfsErrLogPlugin extends AbstractTmDataLink
                     //                    TODO:Dump Incomplete entry to some configurable stream
                   } else {
                     CFE_ES_ERLog_t errorLogRecord = readErrorLogEntry(errorLogEntryData);
+                    updateStats(errorLogEntryData.length);
                     errorLogRecords.add(errorLogRecord);
                   }
                 }
@@ -575,42 +574,49 @@ public class CfsErrLogPlugin extends AbstractTmDataLink
               }
             }
           } else {
+            int bytesRead = 0;
+            int totalBytesRead = 0;
+            //          Read all bytes until we reach EOF
+            while (bytesRead != -1 && totalBytesRead < this.CFE_FS_ES_ERLOG_SIZE) {
+              byte[] errorLogEntryData = new byte[this.CFE_FS_ES_ER_ENTRY_SIZE];
 
-            //            int bytesRead = 0;
-            //
-            //            Optional<CFE_ES_ERLog_t> optionalLog = readErrorLogEntry(dataInputStream);
-            //
-            //            //          Read all bytes until we reach the number of bytes specified by
-            //            // this.CFE_FS_ES_ERLOG_SIZE
-            //            while (optionalLog.isPresent() && bytesRead < this.CFE_FS_ES_ERLOG_SIZE) {
-            //              optionalLog = readErrorLogEntry(dataInputStream);
-            //
-            //              if (optionalLog.isPresent()) {
-            //                errorLogRecords.add(optionalLog.get());
-            //              } else {
-            //                break;
-            //              }
-            //
-            //              bytesRead += this.CFE_FS_ES_ER_ENTRY_SIZE;
-            //            }
-            //
-            //            if (dataInputStream.read() != -1) {
-            //
-            //              eventProducer.sendWarning(
-            //                  String.format(
-            //                      "Read all bytes specified in CFE_FS_ES_ERLOG_SIZE(%d), but EOF
-            // has not been reached yet. ",
-            //                      this.CFE_FS_ES_ERLOG_SIZE));
-            //            } else {
-            //
-            //            }
+              bytesRead = inputStream.read(errorLogEntryData);
+
+              if (bytesRead == -1) {
+                eventProducer.sendInfo("Reached EOF of error log file");
+              } else {
+
+                if (bytesRead < this.CFE_FS_ES_ER_ENTRY_SIZE) {
+                  eventProducer.sendCritical("Incomplete CFE_ES_ERLog_t. Skipping ");
+                  //                    TODO:Dump Incomplete entry to some configurable stream
+                } else {
+                  CFE_ES_ERLog_t errorLogRecord = readErrorLogEntry(errorLogEntryData);
+                  errorLogRecords.add(errorLogRecord);
+                }
+                updateStats(errorLogEntryData.length);
+
+                totalBytesRead += bytesRead;
+              }
+            }
+
+            if (totalBytesRead > this.CFE_FS_ES_ERLOG_SIZE) {
+              eventProducer.sendInfo(
+                  String.format(
+                      " Total Bytes read(%d) from error log exceeded CFE_FS_ES_ERLOG_SIZE(%d)",
+                      totalBytesRead, this.CFE_FS_ES_ERLOG_SIZE));
+            }
+
+            if (totalBytesRead < this.CFE_FS_ES_ERLOG_SIZE && bytesRead == -1) {
+              eventProducer.sendWarning(
+                  String.format(
+                      "Reached EOF before number of bytes specified in CFE_FS_ES_ERLOG_SIZE(%d)",
+                      this.CFE_FS_ES_ERLOG_SIZE));
+            }
           }
 
           eventProducer.sendInfo(
               String.format("Read %d error log entries", errorLogRecords.size()));
 
-          //          logContent = logContentBuilder.toString();
-          //          updateStats(logContent.length());
           BufferedWriter writer = null;
           //
           switch (mode) {
