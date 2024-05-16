@@ -52,7 +52,7 @@ Note the `dependency:copy-dependencies` command; this will copy all of the jars 
 
 ### To Integrate with YAMCS
 This plugin functions as a YAMCS Telemetry Provider and will appear as a Datalink.  To integrate this plugin, add the
-"com.windhoverlabs.yamcs.cfs.evs.CfsEvsPlugin" plugin to the "dataLinks" section of the YAMCS instance configuration. 
+"com.windhoverlabs.yamcs.cfs.err_log.CfsErrLogPlugin" plugin to the "dataLinks" section of the YAMCS instance configuration. 
 For example:
 ```yaml
 dataLinks:
