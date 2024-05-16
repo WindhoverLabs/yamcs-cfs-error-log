@@ -58,17 +58,20 @@ This plugin functions as a YAMCS Telemetry Provider and will appear as a Datalin
 For example:
 ```yaml
 dataLinks:
-  - name: sys-logs
-    class: com.windhoverlabs.yamcs.cfs.sys_log.CfsSysLogPlugin
+  - name: err-logs
+    class: com.windhoverlabs.yamcs.cfs.err_log.CfsErrLogPlugin
     stream: tm_realtime
     buckets: ["cfdpDown"]
-    CFE_FS_ES_SYSLOG_SUBTYPE: 2
-    CFE_ES_SYSTEM_LOG_SIZE: 3072  # Ignored when readUntilEOF is true
+    CFE_FS_ES_ERLOG_SUBTYPE: 1
+    CFE_FS_ES_ER_ENTRY_SIZE: 264  # sizeof(CFE_ES_ERLog_t) 
+    CFE_FS_ES_ERLOG_CONTEXT_ARRAY_SIZE: 32
+    # CFE_FS_ES_ERLOG_SIZE = CFE_ES_ER_LOG_ENTRIES * sizeof(CFE_ES_ERLog_t) 
+    CFE_FS_ES_ERLOG_SIZE: 5280  # Ignored when readUntilEOF is true
     readUntilEOF: false
-    sysLogFileConfig:
+    errLogFileConfig:
       mode: APPEND # APPEND, REPLACE, INACTIVE
-      outputFile: cfe_es_sys_log.txt
-      sysLogBucket: "cfdpDown"
+      outputFile: cfe_es_err_log.csv
+      errLogBucket: "cfdpDown"
 ```
 
 ### Configuration
