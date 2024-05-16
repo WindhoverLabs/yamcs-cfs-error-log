@@ -560,7 +560,7 @@ public class CfsErrLogPlugin extends AbstractTmDataLink
                 } else {
                   if (bytesRead < this.CFE_FS_ES_ER_ENTRY_SIZE) {
                     eventProducer.sendCritical("Incomplete CFE_ES_ERLog_t. Skipping ");
-                    //                    TODO:Dump Incomplete entry to some confgurable stream
+                    //                    TODO:Dump Incomplete entry to some configurable stream
                   } else {
                     CFE_ES_ERLog_t errorLogRecord = readErrorLogEntry(errorLogEntryData);
                     errorLogRecords.add(errorLogRecord);
@@ -726,7 +726,6 @@ public class CfsErrLogPlugin extends AbstractTmDataLink
       columnHeaders.add("ResetType");
       columnHeaders.add("ResetSubtype");
       columnHeaders.add("BootSource");
-      columnHeaders.add("BootSource");
       columnHeaders.add("ProcessorResetCount");
       columnHeaders.add("MaxProcessorResetCount");
 
@@ -756,29 +755,38 @@ public class CfsErrLogPlugin extends AbstractTmDataLink
       csvPrinter.printRecord(columnHeaders);
 
       for (CFE_ES_ERLog_t e : errorLogRecords) {
-        ArrayList<String> evRecord = new ArrayList<String>();
-        evRecord.add(Long.toString(e.LogEntryType));
-        evRecord.add(Long.toString(e.ResetType));
+        ArrayList<String> errRecord = new ArrayList<String>();
+        errRecord.add(Long.toString(e.LogEntryType));
+        errRecord.add(Long.toString(e.ResetType));
 
-        evRecord.add(Long.toString(e.ResetSubtype));
-        evRecord.add(Long.toString(e.BootSource));
-        evRecord.add(Long.toString(e.ProcessorResetCount));
-        evRecord.add(Long.toString(e.MaxProcessorResetCount));
-        evRecord.add(Long.toString(e.DebugVars.DebugFlag));
-        evRecord.add(Long.toString(e.DebugVars.WatchdogWriteFlag));
-        evRecord.add(Long.toString(e.DebugVars.PrintfEnabledFlag));
-        evRecord.add(Long.toString(e.DebugVars.LastAppId));
-        evRecord.add(Long.toString(e.TimeCode.Seconds));
-        evRecord.add(Long.toString(e.TimeCode.Subseconds));
+        errRecord.add(Long.toString(e.ResetSubtype));
+        errRecord.add(Long.toString(e.BootSource));
+        errRecord.add(Long.toString(e.ProcessorResetCount));
+        errRecord.add(Long.toString(e.MaxProcessorResetCount));
+        errRecord.add(Long.toString(e.DebugVars.DebugFlag));
+        errRecord.add(Long.toString(e.DebugVars.WatchdogWriteFlag));
+        errRecord.add(Long.toString(e.DebugVars.PrintfEnabledFlag));
+        errRecord.add(Long.toString(e.DebugVars.LastAppId));
+        errRecord.add(Long.toString(e.TimeCode.Seconds));
+        errRecord.add(Long.toString(e.TimeCode.Subseconds));
 
-        evRecord.add(new String(e.Description));
+        //        NOTE:If I use the regular String constructor, then it messes up the csv output.
+        StringBuilder desc = new StringBuilder();
+        for (char character : e.Description) {
+          if (character != 0x00) {
+            desc.append(character);
+          } else {
+            break;
+          }
+        }
+        errRecord.add(desc.toString());
 
-        evRecord.add(Long.toString(e.ContextSize));
+        errRecord.add(Long.toString(e.ContextSize));
 
-        evRecord.add(Long.toString(e.AppID));
+        errRecord.add(Long.toString(e.AppID));
 
-        evRecord.add(e.Context.toString());
-        csvPrinter.printRecord(evRecord);
+        errRecord.add(e.Context.toString());
+        csvPrinter.printRecord(errRecord);
       }
 
     } catch (IOException e) {
