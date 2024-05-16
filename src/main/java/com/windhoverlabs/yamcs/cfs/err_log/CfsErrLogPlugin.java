@@ -177,7 +177,7 @@ public class CfsErrLogPlugin extends AbstractTmDataLink
   @Override
   public Spec getSpec() {
     Spec spec = new Spec();
-    Spec sysLogFileConfigSpec = new Spec();
+    Spec errLogFileConfigSpec = new Spec();
 
     /* Define our configuration parameters. */
     spec.addOption("name", OptionType.STRING).withRequired(true);
@@ -206,12 +206,12 @@ public class CfsErrLogPlugin extends AbstractTmDataLink
     spec.addOption("buckets", OptionType.LIST_OR_ELEMENT)
         .withElementType(OptionType.STRING)
         .withRequired(true);
-    sysLogFileConfigSpec.addOption("mode", OptionType.STRING).withRequired(true);
-    sysLogFileConfigSpec.addOption("sysLogBucket", OptionType.STRING).withRequired(true);
-    sysLogFileConfigSpec.addOption("outputFile", OptionType.STRING).withRequired(true);
-    spec.addOption("sysLogFileConfig", OptionType.MAP)
+    errLogFileConfigSpec.addOption("mode", OptionType.STRING).withRequired(true);
+    errLogFileConfigSpec.addOption("errLogBucket", OptionType.STRING).withRequired(true);
+    errLogFileConfigSpec.addOption("outputFile", OptionType.STRING).withRequired(true);
+    spec.addOption("errLogFileConfig", OptionType.MAP)
         .withRequired(true)
-        .withSpec(sysLogFileConfigSpec);
+        .withSpec(errLogFileConfigSpec);
 
     return spec;
   }
@@ -238,11 +238,11 @@ public class CfsErrLogPlugin extends AbstractTmDataLink
         EventProducerFactory.getEventProducer(
             yamcsInstance, this.getClass().getCanonicalName(), 10000);
 
-    YConfiguration csvConfig = config.getConfig("sysLogFileConfig");
+    YConfiguration csvConfig = config.getConfig("errLogFileConfig");
 
     mode = getMode(csvConfig);
     outputFile = csvConfig.getString("outputFile");
-    sysLogBucketName = csvConfig.getString("sysLogBucket");
+    sysLogBucketName = csvConfig.getString("errLogBucket");
 
     byteOrder = AbstractPacketPreprocessor.getByteOrder(csvConfig);
 
@@ -633,9 +633,16 @@ public class CfsErrLogPlugin extends AbstractTmDataLink
                 writer = null;
               }
 
-              eventProducer.sendInfo(
-                  "Invoked during APPEND mode. Data will be appended at the end of the file");
-              writeToCSV(writer, errorLogRecords);
+              if (writer != null) {
+                eventProducer.sendInfo(
+                    String.format(
+                        "Invoked during APPEND mode. Data will be appended at the end of the file(%s)",
+                        Paths.get(
+                                sysLogBucket.getBucketRoot().toAbsolutePath().toString(),
+                                outputFile)
+                            .toAbsolutePath()));
+                writeToCSV(writer, errorLogRecords);
+              }
               break;
             case INACTIVE:
               eventProducer.sendInfo(
@@ -647,9 +654,6 @@ public class CfsErrLogPlugin extends AbstractTmDataLink
                     Files.newBufferedWriter(
                         Paths.get(
                             sysLogBucket.getBucketRoot().toAbsolutePath().toString(), outputFile));
-                eventProducer.sendInfo(
-                    "Invoked during REPLACE mode. The contents of the file will be verwritten.");
-                writeToCSV(writer, errorLogRecords);
               } else {
                 if (eventProducer != null) {
                   eventProducer.sendWarning(
@@ -658,6 +662,17 @@ public class CfsErrLogPlugin extends AbstractTmDataLink
                           sysLogBucket.getName()));
                 }
                 writer = null;
+              }
+
+              if (writer != null) {
+                eventProducer.sendInfo(
+                    String.format(
+                        "Invoked during REPLACE mode. The contents of the file(%s) will be verwritten.",
+                        Paths.get(
+                                sysLogBucket.getBucketRoot().toAbsolutePath().toString(),
+                                outputFile)
+                            .toAbsolutePath()));
+                writeToCSV(writer, errorLogRecords);
               }
 
               break;
@@ -796,14 +811,18 @@ public class CfsErrLogPlugin extends AbstractTmDataLink
       }
 
     } catch (IOException e) {
-      e.printStackTrace();
+
+      eventProducer.sendCritical(
+          "There was an error while writing to the csv file:" + e.getMessage());
     }
 
     try {
       csvPrinter.flush();
       csvPrinter.close();
+
     } catch (IOException e) {
-      e.printStackTrace();
+
+      eventProducer.sendCritical("There was an error while closing the csv file:" + e.getMessage());
     }
   }
 
