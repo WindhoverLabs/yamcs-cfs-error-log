@@ -19,7 +19,7 @@ A YAMCS plugin for the Core Flight System (CFS) Error Log format.
 
 *NOTE*:Makes an assumption that error log entries look like this structure:
 
-```
+```C
 typedef struct
 {
     uint32                  LogEntryType;                                             
@@ -36,11 +36,13 @@ typedef struct
     uint32                  Context[CFE_ES_ER_LOG_MAX_CONTEXT_SIZE / sizeof(uint32)]; 
 } CFE_ES_ERLog_t;
 ```
+
+```BASH
 mvn install -DskipTests
 ```
 
 To package it:
-```
+```BASH
 mvn package -DskipTests
 mvn dependency:copy-dependencies
 ```
