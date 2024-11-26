@@ -2,13 +2,13 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.windhoverlabs</groupId>
   <artifactId>yamcs-cfs-error-log</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   
   	<packaging>jar</packaging>
 	<name>YAMCS plugin for the Core Flight System (CFS) Error Log.</name>
   
   	<properties>
-		<yamcsVersion>5.8.7</yamcsVersion>
+		<yamcsVersion>5.9.8</yamcsVersion>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
